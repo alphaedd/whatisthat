@@ -1,0 +1,455 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>¿Quieres ser mi San Valentín? 💘</title>
+
+  <style>
+    :root{
+      --bg1:#120018;
+      --bg2:#2b0a3d;
+      --pink:#ff4d8d;
+      --hot:#ff2e6f;
+      --white:rgba(255,255,255,.92);
+      --glass:rgba(255,255,255,.10);
+      --glass2:rgba(255,255,255,.18);
+      --shadow:0 18px 60px rgba(0,0,0,.45);
+      --focus: 0 0 0 3px rgba(255,77,141,.35);
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+    body{
+      overflow:hidden;
+      background:
+        radial-gradient(1200px 800px at 20% 20%, rgba(255,77,141,.18), transparent 55%),
+        radial-gradient(900px 700px at 80% 40%, rgba(255,46,111,.16), transparent 55%),
+        linear-gradient(135deg,var(--bg1),var(--bg2));
+      color:var(--white);
+    }
+
+    /* Fondo con "bloom" animado */
+    .bloom{
+      position:fixed; inset:-20%;
+      background:
+        radial-gradient(circle at 30% 30%, rgba(255,77,141,.18), transparent 45%),
+        radial-gradient(circle at 70% 50%, rgba(255,46,111,.14), transparent 48%),
+        radial-gradient(circle at 50% 80%, rgba(255,255,255,.06), transparent 55%);
+      filter: blur(18px);
+      animation: drift 12s ease-in-out infinite alternate;
+      pointer-events:none;
+    }
+    @keyframes drift{
+      0%{transform:translate(-1%, -1%) scale(1)}
+      100%{transform:translate(2%, 1%) scale(1.05)}
+    }
+
+    /* Canvas de corazones */
+    canvas#hearts{
+      position:fixed; inset:0;
+      width:100%; height:100%;
+      pointer-events:none;
+      opacity:.95;
+    }
+
+    /* Contenedor principal */
+    .wrap{
+      position:relative;
+      height:100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:22px;
+      z-index:2;
+    }
+
+    /* Tarjeta */
+    .card{
+      width:min(560px, 92vw);
+      border-radius:28px;
+      background:linear-gradient(180deg, var(--glass2), var(--glass));
+      border:1px solid rgba(255,255,255,.16);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      padding:28px 26px 22px;
+      transform: translateY(0);
+      animation: float 4.2s ease-in-out infinite;
+    }
+    @keyframes float{
+      0%,100%{transform:translateY(0)}
+      50%{transform:translateY(-8px)}
+    }
+
+    .badge{
+      display:inline-flex;
+      gap:10px;
+      align-items:center;
+      padding:10px 14px;
+      border-radius:999px;
+      background:rgba(255,255,255,.10);
+      border:1px solid rgba(255,255,255,.14);
+      font-weight:600;
+      letter-spacing:.2px;
+    }
+    .spark{
+      width:10px;height:10px;border-radius:50%;
+      background: var(--pink);
+      box-shadow: 0 0 18px rgba(255,77,141,.9);
+      animation: pulse 1.2s ease-in-out infinite;
+    }
+    @keyframes pulse{
+      0%,100%{transform:scale(1); opacity:.8}
+      50%{transform:scale(1.45); opacity:1}
+    }
+
+    h1{
+      margin:18px 0 10px;
+      font-size: clamp(26px, 4.6vw, 40px);
+      line-height:1.05;
+      letter-spacing:-.6px;
+      text-shadow: 0 8px 28px rgba(0,0,0,.35);
+    }
+    p{
+      margin:0 0 16px;
+      font-size: clamp(14px, 2.6vw, 16px);
+      line-height:1.55;
+      opacity:.95;
+    }
+
+    .names{
+      display:inline-block;
+      padding:2px 10px;
+      border-radius:999px;
+      background:rgba(255,77,141,.12);
+      border:1px solid rgba(255,77,141,.24);
+      color: rgba(255,255,255,.96);
+      font-weight:700;
+      white-space:nowrap;
+    }
+
+    /* Botones */
+    .actions{
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+      margin-top:18px;
+      align-items:center;
+      justify-content:flex-start;
+
+      position:relative;
+      padding:10px;
+      border-radius:18px;
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.12);
+      min-height:72px; /* para que "No" tenga espacio para moverse */
+      overflow:hidden; /* evita que se salga */
+    }
+
+    button{
+      border:0;
+      cursor:pointer;
+      font-weight:800;
+      border-radius:14px;
+      padding:14px 16px;
+      font-size:16px;
+      transition: transform .12s ease, filter .12s ease, box-shadow .12s ease;
+      user-select:none;
+      outline:none;
+    }
+    button:focus-visible{ box-shadow: var(--focus), 0 12px 22px rgba(0,0,0,.18); }
+    button:active{transform:translateY(1px) scale(.99)}
+    .yes{
+      background:linear-gradient(135deg, var(--pink), var(--hot));
+      color:white;
+      box-shadow: 0 14px 30px rgba(255,77,141,.22);
+    }
+    .yes:hover{filter:brightness(1.05)}
+    .no{
+      background:rgba(255,255,255,.10);
+      color:rgba(255,255,255,.9);
+      border:1px solid rgba(255,255,255,.18);
+      box-shadow: 0 12px 22px rgba(0,0,0,.18);
+      position:relative; /* cambiamos a absolute cuando “huye” */
+      will-change: transform, left, top;
+    }
+
+    /* Mensaje final */
+    .modal{
+      position:fixed; inset:0;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      z-index:5;
+      background: rgba(0,0,0,.45);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      padding:22px;
+    }
+    .modal.show{display:flex}
+    .modalCard{
+      width:min(560px, 92vw);
+      border-radius:26px;
+      padding:26px 22px;
+      background:linear-gradient(180deg, rgba(255,255,255,.16), rgba(255,255,255,.08));
+      border:1px solid rgba(255,255,255,.18);
+      box-shadow: var(--shadow);
+      transform: scale(.96);
+      animation: pop .22s ease forwards;
+      text-align:left;
+    }
+    @keyframes pop{to{transform:scale(1)}}
+
+    .big{
+      font-size: clamp(22px, 4.4vw, 34px);
+      margin:0 0 10px;
+      line-height:1.08;
+    }
+    .small{
+      opacity:.95;
+      margin:0 0 16px;
+      font-size:16px;
+      line-height:1.55;
+    }
+    .close{
+      background:rgba(255,255,255,.12);
+      border:1px solid rgba(255,255,255,.18);
+      color:rgba(255,255,255,.92);
+      padding:12px 14px;
+      border-radius:12px;
+      font-weight:800;
+    }
+
+    /* Confeti corazones */
+    .confetti{
+      position:fixed; inset:0;
+      pointer-events:none;
+      z-index:6;
+      overflow:hidden;
+    }
+    .c{
+      position:absolute;
+      font-size:18px;
+      opacity:.9;
+      filter: drop-shadow(0 6px 10px rgba(0,0,0,.25));
+      animation: fall 1.8s ease-in forwards;
+    }
+    @keyframes fall{
+      0%{transform: translateY(-40px) rotate(0deg); opacity:0}
+      10%{opacity:1}
+      100%{transform: translateY(110vh) rotate(260deg); opacity:0}
+    }
+
+    .hint{
+      margin-top:10px;
+      font-size:13px;
+      opacity:.75;
+    }
+
+    /* Reduce Motion */
+    @media (prefers-reduced-motion: reduce){
+      .bloom,.card,.spark{animation:none !important}
+      canvas#hearts{opacity:.65}
+      .c{animation-duration:2.2s}
+    }
+  </style>
+</head>
+
+<body>
+  <div class="bloom"></div>
+  <canvas id="hearts"></canvas>
+
+  <div class="wrap">
+    <main class="card" aria-live="polite">
+      <div class="badge"><span class="spark"></span> Especial para ti 💗</div>
+
+      <h1>¿Quieres ser mi San Valentín? 💘</h1>
+
+      <p>
+        <span class="names" id="nameTo">Mi amor</span>,
+        no sé cómo explicarlo… pero contigo todo se siente más bonito.
+        ¿Te gustaría compartir este 14 de febrero conmigo y hacer un recuerdo que nos quede para siempre?
+      </p>
+
+      <div class="actions" id="actionsArea">
+        <button class="yes" id="btnYes">Sí, acepto 💞</button>
+        <button class="no" id="btnNo">No 🙈</button>
+      </div>
+
+      <div class="hint">Tip: puedes editar el nombre y el mensaje dentro del código 😉</div>
+    </main>
+  </div>
+
+  <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="finalTitle">
+    <div class="modalCard" role="document">
+      <h2 class="big" id="finalTitle">¡Siiii! 😍💖</h2>
+      <p class="small" id="finalText">
+        Me acabas de hacer el día. Prometo cuidarte, hacerte reír y llenar de detalles este San Valentín.
+        Gracias por existir… y por decir que sí. 💘
+      </p>
+      <button class="close" id="btnClose">Cerrar ✨</button>
+    </div>
+  </div>
+
+  <div class="confetti" id="confetti"></div>
+
+  <script>
+    // === PERSONALIZA AQUÍ ===
+    const NOMBRE = "Anto"; // 👈 listo
+    const MENSAJE_FINAL_TITULO = "¡Siiii! 😍💖";
+    const MENSAJE_FINAL =
+      "Me acabas de hacer el día. Prometo cuidarte, hacerte reír y llenar de detalles este San Valentín. Gracias por existir… y por decir que sí. 💘";
+    // =======================
+
+    // Set nombre y mensajes
+    const nameTo = document.getElementById("nameTo");
+    nameTo.textContent = (NOMBRE && NOMBRE.trim() !== "") ? NOMBRE : "Mi amor";
+    document.getElementById("finalTitle").textContent = MENSAJE_FINAL_TITULO;
+    document.getElementById("finalText").textContent = MENSAJE_FINAL;
+
+    // Botón NO que se escapa (pero solo dentro del área de botones)
+    const btnNo = document.getElementById("btnNo");
+    const btnYes = document.getElementById("btnYes");
+    const actionsArea = document.getElementById("actionsArea");
+
+    function moveNoButton() {
+      const rect = actionsArea.getBoundingClientRect();
+      const pad = 10;
+
+      // Cambiamos a posición absoluta dentro del contenedor actionsArea
+      btnNo.style.position = "absolute";
+
+      const maxX = rect.width - btnNo.offsetWidth - pad * 2;
+      const maxY = rect.height - btnNo.offsetHeight - pad * 2;
+
+      const x = pad + Math.random() * Math.max(0, maxX);
+      const y = pad + Math.random() * Math.max(0, maxY);
+
+      btnNo.style.left = x + "px";
+      btnNo.style.top = y + "px";
+      btnNo.style.transform = "translateZ(0)";
+    }
+
+    // Desktop: huye al pasar el mouse
+    btnNo.addEventListener("mouseenter", moveNoButton);
+    // Móvil: huye al tocar
+    btnNo.addEventListener("touchstart", (e) => { e.preventDefault(); moveNoButton(); }, {passive:false});
+
+    // Modal + confeti al aceptar
+    const modal = document.getElementById("modal");
+    const confetti = document.getElementById("confetti");
+    const btnClose = document.getElementById("btnClose");
+
+    function heartConfetti() {
+      const hearts = ["💗","💖","💘","💝","💞","💕"];
+      const amount = 42;
+      for (let i = 0; i < amount; i++) {
+        const s = document.createElement("span");
+        s.className = "c";
+        s.textContent = hearts[(Math.random() * hearts.length) | 0];
+        s.style.left = (Math.random() * 100) + "vw";
+        s.style.animationDelay = (Math.random() * 0.25) + "s";
+        s.style.fontSize = (14 + Math.random() * 16) + "px";
+        confetti.appendChild(s);
+        setTimeout(() => s.remove(), 2200);
+      }
+    }
+
+    function openModal(){
+      modal.classList.add("show");
+      heartConfetti();
+      btnClose.focus();
+    }
+    function closeModal(){
+      modal.classList.remove("show");
+      btnYes.focus();
+    }
+
+    btnYes.addEventListener("click", openModal);
+    btnClose.addEventListener("click", closeModal);
+
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) closeModal();
+    });
+
+    // Teclado: ESC cierra
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && modal.classList.contains("show")) closeModal();
+    });
+
+    // ====== CANVAS CORAZONES FLOTANDO (optimizado) ======
+    const canvas = document.getElementById("hearts");
+    const ctx = canvas.getContext("2d", { alpha: true });
+
+    let W = 0, H = 0, DPR = 1;
+    function resize(){
+      DPR = Math.min(window.devicePixelRatio || 1, 2);
+      W = window.innerWidth;
+      H = window.innerHeight;
+
+      canvas.width = Math.floor(W * DPR);
+      canvas.height = Math.floor(H * DPR);
+      canvas.style.width = W + "px";
+      canvas.style.height = H + "px";
+      ctx.setTransform(DPR,0,0,DPR,0,0);
+    }
+    window.addEventListener("resize", resize, { passive: true });
+    resize();
+
+    const prefersReduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    const heartChars = ["❤","💗","💖","💘","💝","💕"];
+    const particles = [];
+    const COUNT = prefersReduced ? 24 : 42;
+
+    const rand = (min,max)=> min + Math.random()*(max-min);
+
+    function spawn(){
+      return {
+        x: rand(0, W),
+        y: rand(H + 20, H + 220),
+        vy: rand(prefersReduced ? 0.45 : 0.6, prefersReduced ? 1.1 : 1.6),
+        vx: rand(-0.30, 0.30),
+        size: rand(14, 28),
+        rot: rand(0, Math.PI*2),
+        vr: rand(-0.02, 0.02),
+        a: rand(0.35, 0.9),
+        char: heartChars[(Math.random()*heartChars.length)|0]
+      };
+    }
+
+    for(let i=0;i<COUNT;i++) particles.push(spawn());
+
+    function draw(){
+      ctx.clearRect(0,0,W,H);
+
+      for(const p of particles){
+        p.y -= p.vy;
+        p.x += p.vx + Math.sin((p.y/120) + p.rot) * 0.25;
+        p.rot += p.vr;
+
+        if(p.y < -80){
+          p.x = rand(0, W);
+          p.y = rand(H + 40, H + 240);
+        }
+
+        ctx.save();
+        ctx.globalAlpha = p.a;
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rot);
+
+        ctx.shadowColor = "rgba(255,77,141,.55)";
+        ctx.shadowBlur = 14;
+
+        ctx.font = `${p.size}px system-ui, Apple Color Emoji, Segoe UI Emoji`;
+        ctx.fillText(p.char, 0, 0);
+        ctx.restore();
+      }
+
+      requestAnimationFrame(draw);
+    }
+    draw();
+  </script>
+</body>
+</html>
