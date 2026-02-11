@@ -29,7 +29,6 @@
       color:var(--white);
     }
 
-    /* Fondo con "bloom" animado */
     .bloom{
       position:fixed; inset:-20%;
       background:
@@ -45,7 +44,6 @@
       100%{transform:translate(2%, 1%) scale(1.05)}
     }
 
-    /* Canvas de corazones */
     canvas#hearts{
       position:fixed; inset:0;
       width:100%; height:100%;
@@ -53,7 +51,6 @@
       opacity:.95;
     }
 
-    /* Contenedor principal */
     .wrap{
       position:relative;
       height:100%;
@@ -64,7 +61,6 @@
       z-index:2;
     }
 
-    /* Tarjeta */
     .card{
       width:min(560px, 92vw);
       border-radius:28px;
@@ -74,7 +70,6 @@
       backdrop-filter: blur(14px);
       -webkit-backdrop-filter: blur(14px);
       padding:28px 26px 22px;
-      transform: translateY(0);
       animation: float 4.2s ease-in-out infinite;
     }
     @keyframes float{
@@ -129,7 +124,6 @@
       white-space:nowrap;
     }
 
-    /* Botones */
     .actions{
       display:flex;
       gap:12px;
@@ -143,8 +137,8 @@
       border-radius:18px;
       background:rgba(255,255,255,.06);
       border:1px solid rgba(255,255,255,.12);
-      min-height:72px; /* para que "No" tenga espacio para moverse */
-      overflow:hidden; /* evita que se salga */
+      min-height:72px;
+      overflow:hidden;
     }
 
     button{
@@ -171,11 +165,10 @@
       color:rgba(255,255,255,.9);
       border:1px solid rgba(255,255,255,.18);
       box-shadow: 0 12px 22px rgba(0,0,0,.18);
-      position:relative; /* cambiamos a absolute cuando “huye” */
+      position:relative;
       will-change: transform, left, top;
     }
 
-    /* Mensaje final */
     .modal{
       position:fixed; inset:0;
       display:none;
@@ -211,6 +204,7 @@
       margin:0 0 16px;
       font-size:16px;
       line-height:1.55;
+      white-space: pre-line; /* 👈 para respetar saltos de línea del verso */
     }
     .close{
       background:rgba(255,255,255,.12);
@@ -221,7 +215,6 @@
       font-weight:800;
     }
 
-    /* Confeti corazones */
     .confetti{
       position:fixed; inset:0;
       pointer-events:none;
@@ -247,7 +240,6 @@
       opacity:.75;
     }
 
-    /* Reduce Motion */
     @media (prefers-reduced-motion: reduce){
       .bloom,.card,.spark{animation:none !important}
       canvas#hearts{opacity:.65}
@@ -283,11 +275,8 @@
 
   <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="finalTitle">
     <div class="modalCard" role="document">
-      <h2 class="big" id="finalTitle">¡Siiii! 😍💖</h2>
-      <p class="small" id="finalText">
-        Me acabas de hacer el día. Prometo cuidarte, hacerte reír y llenar de detalles este San Valentín.
-        Gracias por existir… y por decir que sí. 💘
-      </p>
+      <h2 class="big" id="finalTitle">💖</h2>
+      <p class="small" id="finalText"></p>
       <button class="close" id="btnClose">Cerrar ✨</button>
     </div>
   </div>
@@ -296,19 +285,27 @@
 
   <script>
     // === PERSONALIZA AQUÍ ===
-    const NOMBRE = "Anto"; // 👈 listo
-    const MENSAJE_FINAL_TITULO = "¡Siiii! 😍💖";
-    const MENSAJE_FINAL =
-      "Me acabas de hacer el día. Prometo cuidarte, hacerte reír y llenar de detalles este San Valentín. Gracias por existir… y por decir que sí. 💘";
+    const NOMBRE = "Anto";
+
+    const MENSAJE_FINAL_TITULO = "Para ti, Anto 💘";
+    const VERSO = `“Tu amistad llegó sin avisar,
+pero se quedó como hogar en el alma.
+En los días grises eres calma,
+y en mis alegrías, la risa que las hace eternas.
+Con los años, lo que empezó sencillo
+se convirtió en algo genial, fuerte y verdadero;
+un cariño profundo y sincero
+de esos que no se explican…
+solo se sienten.”`;
     // =======================
 
     // Set nombre y mensajes
     const nameTo = document.getElementById("nameTo");
     nameTo.textContent = (NOMBRE && NOMBRE.trim() !== "") ? NOMBRE : "Mi amor";
     document.getElementById("finalTitle").textContent = MENSAJE_FINAL_TITULO;
-    document.getElementById("finalText").textContent = MENSAJE_FINAL;
+    document.getElementById("finalText").textContent = VERSO;
 
-    // Botón NO que se escapa (pero solo dentro del área de botones)
+    // Botón NO que se escapa (solo dentro del área de botones)
     const btnNo = document.getElementById("btnNo");
     const btnYes = document.getElementById("btnYes");
     const actionsArea = document.getElementById("actionsArea");
@@ -317,7 +314,6 @@
       const rect = actionsArea.getBoundingClientRect();
       const pad = 10;
 
-      // Cambiamos a posición absoluta dentro del contenedor actionsArea
       btnNo.style.position = "absolute";
 
       const maxX = rect.width - btnNo.offsetWidth - pad * 2;
@@ -331,9 +327,7 @@
       btnNo.style.transform = "translateZ(0)";
     }
 
-    // Desktop: huye al pasar el mouse
     btnNo.addEventListener("mouseenter", moveNoButton);
-    // Móvil: huye al tocar
     btnNo.addEventListener("touchstart", (e) => { e.preventDefault(); moveNoButton(); }, {passive:false});
 
     // Modal + confeti al aceptar
@@ -373,12 +367,11 @@
       if (e.target === modal) closeModal();
     });
 
-    // Teclado: ESC cierra
     window.addEventListener("keydown", (e) => {
       if (e.key === "Escape" && modal.classList.contains("show")) closeModal();
     });
 
-    // ====== CANVAS CORAZONES FLOTANDO (optimizado) ======
+    // ====== CANVAS CORAZONES FLOTANDO ======
     const canvas = document.getElementById("hearts");
     const ctx = canvas.getContext("2d", { alpha: true });
 
